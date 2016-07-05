@@ -27,6 +27,8 @@ import org.apache.flink.metrics.groups.scope.ScopeFormat.TaskManagerScopeFormat;
 import org.apache.flink.metrics.groups.scope.ScopeFormat.TaskScopeFormat;
 import org.apache.flink.util.AbstractID;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -37,6 +39,18 @@ public class TaskGroupTest {
 	// ------------------------------------------------------------------------
 	//  scope tests
 	// ------------------------------------------------------------------------
+	private MetricRegistry registry;
+
+	@Before
+	public void createRegistry() {
+		this.registry = new MetricRegistry(new Configuration());
+	}
+
+	@After
+	public void shutdownRegistry() {
+		this.registry.shutdown();
+		this.registry = null;
+	}
 
 	@Test
 	public void testGenerateScopeDefault() {
@@ -46,7 +60,7 @@ public class TaskGroupTest {
 		AbstractID executionId = new AbstractID();
 
 		TaskManagerMetricGroup tmGroup = new TaskManagerMetricGroup(registry, "theHostName", "test-tm-id");
-		JobMetricGroup jmGroup = new JobMetricGroup(registry, tmGroup, new JobID(), "myJobName");
+		TaskManagerJobMetricGroup jmGroup = new TaskManagerJobMetricGroup(registry, tmGroup, new JobID(), "myJobName");
 		TaskMetricGroup taskGroup = new TaskMetricGroup(registry, jmGroup, vertexId, executionId, "aTaskName", 13, 2);
 
 		assertArrayEquals(
@@ -56,6 +70,7 @@ public class TaskGroupTest {
 		assertEquals(
 				"theHostName.taskmanager.test-tm-id.myJobName.aTaskName.13",
 				taskGroup.getScopeString());
+		registry.shutdown();
 	}
 
 	@Test
@@ -71,7 +86,7 @@ public class TaskGroupTest {
 		AbstractID executionId = new AbstractID();
 
 		TaskManagerMetricGroup tmGroup = new TaskManagerMetricGroup(registry, "theHostName", "test-tm-id");
-		JobMetricGroup jmGroup = new JobMetricGroup(registry, tmGroup, jid, "myJobName");
+		TaskManagerJobMetricGroup jmGroup = new TaskManagerJobMetricGroup(registry, tmGroup, jid, "myJobName");
 		TaskMetricGroup taskGroup = new TaskMetricGroup(
 				registry, jmGroup, taskFormat, vertexId, executionId, "aTaskName", 13, 2);
 
@@ -82,6 +97,7 @@ public class TaskGroupTest {
 		assertEquals(
 				String.format("test-tm-id.%s.%s.%s", jid, vertexId, executionId),
 				taskGroup.getScopeString());
+		registry.shutdown();
 	}
 
 	@Test
@@ -98,7 +114,7 @@ public class TaskGroupTest {
 		AbstractID executionId = new AbstractID();
 
 		TaskManagerMetricGroup tmGroup = new TaskManagerMetricGroup(registry, "theHostName", "test-tm-id");
-		JobMetricGroup jmGroup = new JobMetricGroup(registry, tmGroup, new JobID(), "myJobName");
+		TaskManagerJobMetricGroup jmGroup = new TaskManagerJobMetricGroup(registry, tmGroup, new JobID(), "myJobName");
 
 		TaskMetricGroup taskGroup = new TaskMetricGroup(
 				registry, jmGroup, format, new AbstractID(), executionId, "aTaskName", 13, 1);
@@ -110,5 +126,6 @@ public class TaskGroupTest {
 		assertEquals(
 				"theHostName.taskmanager.test-tm-id.myJobName." + executionId + ".13",
 				taskGroup.getScopeString());
+		registry.shutdown();
 	}
 }

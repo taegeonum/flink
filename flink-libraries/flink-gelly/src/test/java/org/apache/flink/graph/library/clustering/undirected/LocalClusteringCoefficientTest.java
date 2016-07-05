@@ -40,9 +40,6 @@ extends AsmTestBase {
 	@Test
 	public void testSimpleGraph()
 			throws Exception {
-		DataSet<Result<IntValue>> cc = undirectedSimpleGraph
-			.run(new LocalClusteringCoefficient<IntValue, NullValue, NullValue>());
-
 		String expectedResult =
 			"(0,(2,1))\n" +
 			"(1,(3,2))\n" +
@@ -50,6 +47,9 @@ extends AsmTestBase {
 			"(3,(4,1))\n" +
 			"(4,(1,0))\n" +
 			"(5,(1,0))";
+
+		DataSet<Result<IntValue>> cc = undirectedSimpleGraph
+			.run(new LocalClusteringCoefficient<IntValue, NullValue, NullValue>());
 
 		TestBaseUtils.compareResultAsText(cc.collect(), expectedResult);
 	}
@@ -76,12 +76,10 @@ extends AsmTestBase {
 	@Test
 	public void testRMatGraph()
 			throws Exception {
-		DataSet<Result<LongValue>> cc = undirectedRMatGraph
-			.run(new LocalClusteringCoefficient<LongValue, NullValue, NullValue>());
-
-		ChecksumHashCode checksum = DataSetUtils.checksumHashCode(cc);
+		ChecksumHashCode checksum = DataSetUtils.checksumHashCode(undirectedRMatGraph
+			.run(new LocalClusteringCoefficient<LongValue, NullValue, NullValue>()));
 
 		assertEquals(902, checksum.getCount());
-		assertEquals(0x000001b08e783277L, checksum.getChecksum());
+		assertEquals(0x000001cab2d3677bL, checksum.getChecksum());
 	}
 }

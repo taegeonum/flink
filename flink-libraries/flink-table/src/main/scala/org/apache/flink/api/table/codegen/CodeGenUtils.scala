@@ -18,16 +18,17 @@
 
 package org.apache.flink.api.table.codegen
 
-import java.lang.reflect.Field
+import java.lang.reflect.{Field, Method}
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.apache.calcite.util.BuiltInMethod
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo._
 import org.apache.flink.api.common.typeinfo.PrimitiveArrayTypeInfo._
-import org.apache.flink.api.common.typeinfo.{NumericTypeInfo, TypeInformation}
+import org.apache.flink.api.common.typeinfo.{FractionalTypeInfo, SqlTimeTypeInfo, TypeInformation}
 import org.apache.flink.api.common.typeutils.CompositeType
-import org.apache.flink.api.java.typeutils.{TypeExtractor, PojoTypeInfo, TupleTypeInfo}
+import org.apache.flink.api.java.typeutils.{PojoTypeInfo, TupleTypeInfo, TypeExtractor}
 import org.apache.flink.api.scala.typeutils.CaseClassTypeInfo
-import org.apache.flink.api.table.typeutils.RowTypeInfo
+import org.apache.flink.api.table.typeutils.{RowTypeInfo, TypeCheckUtils}
 
 object CodeGenUtils {
 
@@ -64,6 +65,11 @@ object CodeGenUtils {
     case BOOLEAN_PRIMITIVE_ARRAY_TYPE_INFO => "boolean[]"
     case CHAR_PRIMITIVE_ARRAY_TYPE_INFO => "char[]"
 
+    // internal primitive representation of Date/Time/Timestamp
+    case SqlTimeTypeInfo.DATE => "int"
+    case SqlTimeTypeInfo.TIME => "int"
+    case SqlTimeTypeInfo.TIMESTAMP => "long"
+
     case _ =>
       tpe.getTypeClass.getCanonicalName
   }
@@ -94,13 +100,51 @@ object CodeGenUtils {
     case BOOLEAN_TYPE_INFO => "false"
     case STRING_TYPE_INFO => "\"\""
     case CHAR_TYPE_INFO => "'\\0'"
+    case SqlTimeTypeInfo.DATE | SqlTimeTypeInfo.TIME | SqlTimeTypeInfo.TIMESTAMP => "-1"
+
     case _ => "null"
   }
 
-  def requireNumeric(genExpr: GeneratedExpression) = genExpr.resultType match {
-    case nti: NumericTypeInfo[_] => // ok
-    case _ => throw new CodeGenException("Numeric expression type expected.")
+  def superPrimitive(typeInfo: TypeInformation[_]): String = typeInfo match {
+    case _: FractionalTypeInfo[_] => "double"
+    case _ => "long"
   }
+
+  def qualifyMethod(method: Method): String =
+    method.getDeclaringClass.getCanonicalName + "." + method.getName
+
+  def internalToTemporalCode(resultType: TypeInformation[_], resultTerm: String) =
+    resultType match {
+      case SqlTimeTypeInfo.DATE =>
+        s"${qualifyMethod(BuiltInMethod.INTERNAL_TO_DATE.method)}($resultTerm)"
+      case SqlTimeTypeInfo.TIME =>
+        s"${qualifyMethod(BuiltInMethod.INTERNAL_TO_TIME.method)}($resultTerm)"
+      case SqlTimeTypeInfo.TIMESTAMP =>
+        s"${qualifyMethod(BuiltInMethod.INTERNAL_TO_TIMESTAMP.method)}($resultTerm)"
+    }
+
+  def temporalToInternalCode(resultType: TypeInformation[_], resultTerm: String) =
+    resultType match {
+      case SqlTimeTypeInfo.DATE =>
+        s"${qualifyMethod(BuiltInMethod.DATE_TO_INT.method)}($resultTerm)"
+      case SqlTimeTypeInfo.TIME =>
+        s"${qualifyMethod(BuiltInMethod.TIME_TO_INT.method)}($resultTerm)"
+      case SqlTimeTypeInfo.TIMESTAMP =>
+        s"${qualifyMethod(BuiltInMethod.TIMESTAMP_TO_LONG.method)}($resultTerm)"
+    }
+
+  // ----------------------------------------------------------------------------------------------
+
+  def requireNumeric(genExpr: GeneratedExpression) =
+    if (!TypeCheckUtils.isNumeric(genExpr.resultType)) {
+      throw new CodeGenException("Numeric expression type expected, but was " +
+        s"'${genExpr.resultType}'.")
+    }
+
+  def requireComparable(genExpr: GeneratedExpression) =
+    if (!TypeCheckUtils.isComparable(genExpr.resultType)) {
+      throw new CodeGenException(s"Comparable type expected, but was '${genExpr.resultType}'.")
+    }
 
   def requireString(genExpr: GeneratedExpression) = genExpr.resultType match {
     case STRING_TYPE_INFO => // ok
@@ -111,6 +155,8 @@ object CodeGenUtils {
     case BOOLEAN_TYPE_INFO => // ok
     case _ => throw new CodeGenException("Boolean expression type expected.")
   }
+
+  // ----------------------------------------------------------------------------------------------
 
   def isReference(genExpr: GeneratedExpression): Boolean = isReference(genExpr.resultType)
 
@@ -124,27 +170,6 @@ object CodeGenUtils {
          | BOOLEAN_TYPE_INFO
          | CHAR_TYPE_INFO => false
     case _ => true
-  }
-
-  def isNumeric(genExpr: GeneratedExpression): Boolean = isNumeric(genExpr.resultType)
-
-  def isNumeric(typeInfo: TypeInformation[_]): Boolean = typeInfo match {
-    case nti: NumericTypeInfo[_] => true
-    case _ => false
-  }
-
-  def isString(genExpr: GeneratedExpression): Boolean = isString(genExpr.resultType)
-
-  def isString(typeInfo: TypeInformation[_]): Boolean = typeInfo match {
-    case STRING_TYPE_INFO => true
-    case _ => false
-  }
-
-  def isBoolean(genExpr: GeneratedExpression): Boolean = isBoolean(genExpr.resultType)
-
-  def isBoolean(typeInfo: TypeInformation[_]): Boolean = typeInfo match {
-    case BOOLEAN_TYPE_INFO => true
-    case _ => false
   }
 
   // ----------------------------------------------------------------------------------------------

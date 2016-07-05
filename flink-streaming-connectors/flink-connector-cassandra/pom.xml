@@ -59,21 +59,23 @@ under the License.
 				<executions>
 					<!-- Run shade goal on package phase -->
 					<execution>
+						<id>shade-flink</id>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
 						</goals>
-						<configuration>
+						<configuration combine.self="override">
 							<artifactSet>
 								<includes>
 									<include>com.datastax.cassandra:cassandra-driver-core</include>
 									<include>com.datastax.cassandra:cassandra-driver-mapping</include>
+									<include>com.google.guava:guava</include>
 								</includes>
 							</artifactSet>
 							<relocations>
 								<relocation>
 									<pattern>com.google</pattern>
-									<shadedPattern>org.apache.flink.shaded.com.google</shadedPattern>
+									<shadedPattern>org.apache.flink.cassandra.shaded.com.google</shadedPattern>
 									<excludes>
 										<exclude>com.google.protobuf.**</exclude>
 										<exclude>com.google.inject.**</exclude>

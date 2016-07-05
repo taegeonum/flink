@@ -17,9 +17,11 @@
  */
 package org.apache.flink.api.scala.table
 
+import java.sql.{Timestamp, Time, Date}
+
 import scala.language.implicitConversions
 
-import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.api.common.typeinfo.{SqlTimeTypeInfo, TypeInformation}
 import org.apache.flink.api.table.expressions._
 
 /**
@@ -69,16 +71,16 @@ trait ImplicitExpressionOperations {
   def desc = Desc(expr)
 
   /**
-    * Conditional operator that decides which of two other expressions should be evaluated
+    * Ternary conditional operator that decides which of two other expressions should be evaluated
     * based on a evaluated boolean condition.
     *
-    * e.g. (42 > 5).eval("A", "B") leads to "A"
+    * e.g. (42 > 5).?("A", "B") leads to "A"
     *
     * @param ifTrue expression to be evaluated if condition holds
     * @param ifFalse expression to be evaluated if condition does not hold
     */
-  def eval(ifTrue: Expression, ifFalse: Expression) = {
-    Eval(expr, ifTrue, ifFalse)
+  def ?(ifTrue: Expression, ifFalse: Expression) = {
+    If(expr, ifTrue, ifFalse)
   }
 
   // scalar functions
@@ -201,6 +203,21 @@ trait ImplicitExpressionOperations {
     * e.g. "A+" matches all Strings that consist of at least one A
     */
   def similar(pattern: Expression) = Similar(expr, pattern)
+
+  /**
+    * Parses a date String in the form "yy-mm-dd" to a SQL Date.
+    */
+  def toDate = Cast(expr, SqlTimeTypeInfo.DATE)
+
+  /**
+    * Parses a time String in the form "hh:mm:ss" to a SQL Time.
+    */
+  def toTime = Cast(expr, SqlTimeTypeInfo.TIME)
+
+    /**
+    * Parses a timestamp String in the form "yy-mm-dd hh:mm:ss.fff" to a SQL Timestamp.
+    */
+  def toTimestamp = Cast(expr, SqlTimeTypeInfo.TIMESTAMP)
 }
 
 /**
@@ -218,6 +235,14 @@ trait ImplicitExpressionConversions {
 
   implicit class LiteralLongExpression(l: Long) extends ImplicitExpressionOperations {
     def expr = Literal(l)
+  }
+
+  implicit class LiteralByteExpression(b: Byte) extends ImplicitExpressionOperations {
+    def expr = Literal(b)
+  }
+
+  implicit class LiteralShortExpression(s: Short) extends ImplicitExpressionOperations {
+    def expr = Literal(s)
   }
 
   implicit class LiteralIntExpression(i: Int) extends ImplicitExpressionOperations {
@@ -240,11 +265,42 @@ trait ImplicitExpressionConversions {
     def expr = Literal(bool)
   }
 
+  implicit class LiteralJavaDecimalExpression(javaDecimal: java.math.BigDecimal)
+      extends ImplicitExpressionOperations {
+    def expr = Literal(javaDecimal)
+  }
+
+  implicit class LiteralScalaDecimalExpression(scalaDecimal: scala.math.BigDecimal)
+      extends ImplicitExpressionOperations {
+    def expr = Literal(scalaDecimal.bigDecimal)
+  }
+
+  implicit class LiteralSqlDateExpression(sqlDate: Date) extends ImplicitExpressionOperations {
+    def expr = Literal(sqlDate)
+  }
+
+  implicit class LiteralSqlTimeExpression(sqlTime: Time) extends ImplicitExpressionOperations {
+    def expr = Literal(sqlTime)
+  }
+
+  implicit class LiteralSqlTimestampExpression(sqlTimestamp: Timestamp)
+      extends ImplicitExpressionOperations {
+    def expr = Literal(sqlTimestamp)
+  }
+
   implicit def symbol2FieldExpression(sym: Symbol): Expression = UnresolvedFieldReference(sym.name)
+  implicit def byte2Literal(b: Byte): Expression = Literal(b)
+  implicit def short2Literal(s: Short): Expression = Literal(s)
   implicit def int2Literal(i: Int): Expression = Literal(i)
   implicit def long2Literal(l: Long): Expression = Literal(l)
   implicit def double2Literal(d: Double): Expression = Literal(d)
   implicit def float2Literal(d: Float): Expression = Literal(d)
   implicit def string2Literal(str: String): Expression = Literal(str)
   implicit def boolean2Literal(bool: Boolean): Expression = Literal(bool)
+  implicit def javaDec2Literal(javaDec: java.math.BigDecimal): Expression = Literal(javaDec)
+  implicit def scalaDec2Literal(scalaDec: scala.math.BigDecimal): Expression =
+    Literal(scalaDec.bigDecimal)
+  implicit def sqlDate2Literal(sqlDate: Date): Expression = Literal(sqlDate)
+  implicit def sqlTime2Literal(sqlTime: Time): Expression = Literal(sqlTime)
+  implicit def sqlTimestamp2Literal(sqlTimestamp: Timestamp): Expression = Literal(sqlTimestamp)
 }

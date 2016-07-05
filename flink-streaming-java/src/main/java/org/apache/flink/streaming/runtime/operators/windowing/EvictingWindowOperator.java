@@ -83,10 +83,10 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 	@Override
 	@SuppressWarnings("unchecked")
 	public void processElement(StreamRecord<IN> element) throws Exception {
-
 		Collection<W> elementWindows = windowAssigner.assignWindows(
-			element.getValue(),
-			element.getTimestamp());
+				element.getValue(),
+				element.getTimestamp(),
+				windowAssignerContext);
 
 		final K key = (K) getStateBackend().getCurrentKey();
 
@@ -133,6 +133,7 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 				// check if the window is already inactive
 				if (isLate(actualWindow)) {
 					LOG.info("Dropped element " + element + " for window " + actualWindow + " due to lateness.");
+					mergingWindows.retireWindow(actualWindow);
 					continue;
 				}
 

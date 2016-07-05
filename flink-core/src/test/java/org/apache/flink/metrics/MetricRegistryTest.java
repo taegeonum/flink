@@ -25,12 +25,13 @@ import org.apache.flink.metrics.groups.scope.ScopeFormats;
 import org.apache.flink.metrics.reporter.Scheduled;
 import org.apache.flink.metrics.util.TestReporter;
 
+import org.apache.flink.util.TestLogger;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class MetricRegistryTest {
+public class MetricRegistryTest extends TestLogger {
 	
 	/**
 	 * Verifies that the reporter class argument is correctly used to instantiate and open the reporter.
@@ -163,14 +164,14 @@ public class MetricRegistryTest {
 		Configuration config = new Configuration();
 
 		config.setString(MetricRegistry.KEY_METRICS_SCOPE_NAMING_TM, "A");
-		config.setString(MetricRegistry.KEY_METRICS_SCOPE_NAMING_JOB, "B");
+		config.setString(MetricRegistry.KEY_METRICS_SCOPE_NAMING_TM_JOB, "B");
 		config.setString(MetricRegistry.KEY_METRICS_SCOPE_NAMING_TASK, "C");
 		config.setString(MetricRegistry.KEY_METRICS_SCOPE_NAMING_OPERATOR, "D");
 
 		ScopeFormats scopeConfig = MetricRegistry.createScopeConfig(config);
 
 		assertEquals("A", scopeConfig.getTaskManagerFormat().format());
-		assertEquals("B", scopeConfig.getJobFormat().format());
+		assertEquals("B", scopeConfig.getTaskManagerJobFormat().format());
 		assertEquals("C", scopeConfig.getTaskFormat().format());
 		assertEquals("D", scopeConfig.getOperatorFormat().format());
 	}
