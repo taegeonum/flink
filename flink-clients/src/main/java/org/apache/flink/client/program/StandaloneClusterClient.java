@@ -98,7 +98,7 @@ public class StandaloneClusterClient extends ClusterClient {
 		}
 		long submitTime = System.currentTimeMillis();
 		LOG.info("submit_time\t" + (endTime - startTime) + (submitTime - startTime));
-		System.out.println("submit_time\t" + (endTime - startTime) + (submitTime - startTime));
+		System.out.println("submit_time\t" + (endTime - startTime) + "\t" + (submitTime - startTime));
 		return result;
 	}
 
