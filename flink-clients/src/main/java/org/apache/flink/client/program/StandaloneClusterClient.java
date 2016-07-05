@@ -24,6 +24,8 @@ import org.apache.flink.runtime.clusterframework.messages.GetClusterStatus;
 import org.apache.flink.runtime.clusterframework.messages.GetClusterStatusResponse;
 import org.apache.flink.runtime.instance.ActorGateway;
 import org.apache.flink.runtime.jobgraph.JobGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
@@ -36,6 +38,7 @@ import java.util.List;
  * brought up independently of a specific job.
  */
 public class StandaloneClusterClient extends ClusterClient {
+	private final Logger LOG = LoggerFactory.getLogger(getClass());
 
 	public StandaloneClusterClient(Configuration config) throws IOException {
 		super(config);
@@ -85,11 +88,17 @@ public class StandaloneClusterClient extends ClusterClient {
 	@Override
 	protected JobSubmissionResult submitJob(JobGraph jobGraph, ClassLoader classLoader)
 			throws ProgramInvocationException {
+		this.endTime = System.currentTimeMillis();
+		JobSubmissionResult result = null;
 		if (isDetached()) {
-			return super.runDetached(jobGraph, classLoader);
+			result = super.runDetached(jobGraph, classLoader);
 		} else {
-			return super.run(jobGraph, classLoader);
+			result = super.run(jobGraph, classLoader);
 		}
+		long submitTime = System.currentTimeMillis();
+		LOG.info("submit_time\t" + (endTime - startTime) + (submitTime - startTime));
+		System.out.println("submit_time\t" + (endTime - startTime) + (submitTime - startTime));
+		return result;
 	}
 
 	@Override

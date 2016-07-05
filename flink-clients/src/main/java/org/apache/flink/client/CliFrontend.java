@@ -1002,7 +1002,8 @@ public class CliFrontend {
 	 */
 	public static void main(String[] args) {
 		EnvironmentInformation.logEnvironmentInfo(LOG, "Command Line Client", args);
-
+		LOG.info("check@@");
+		System.out.println("check@@");
 		try {
 			CliFrontend cli = new CliFrontend();
 			int retCode = cli.parseParameters(args);
