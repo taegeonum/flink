@@ -101,6 +101,10 @@ public class Client {
 	 */
 	private JobID lastJobID;
 
+	private long beforeJobGraph;
+
+	private long afterJobGraph;
+
 	// ------------------------------------------------------------------------
 	//                            Construction
 	// ------------------------------------------------------------------------
@@ -364,7 +368,9 @@ public class Client {
 	public JobSubmissionResult runDetached(FlinkPlan compiledPlan, List<URL> libraries, List<URL> classpaths,
 			ClassLoader classLoader, String savepointPath) throws ProgramInvocationException
 	{
+		beforeJobGraph = System.currentTimeMillis();
 		JobGraph job = getJobGraph(compiledPlan, libraries, classpaths, savepointPath);
+		afterJobGraph = System.currentTimeMillis();
 		return runDetached(job, classLoader);
 	}
 
@@ -386,12 +392,13 @@ public class Client {
 
 	public JobSubmissionResult runDetached(JobGraph jobGraph, ClassLoader classLoader) throws ProgramInvocationException {
 		ActorGateway jobManagerGateway;
-
+		long beforeDetachted = System.currentTimeMillis();
 		try {
 			jobManagerGateway = getJobManagerGateway();
 		} catch (Exception e) {
 			throw new ProgramInvocationException("Failed to retrieve the JobManager gateway.", e);
 		}
+		long afterJobManagerGateway = System.currentTimeMillis();
 
 		LOG.info("Checking and uploading JAR files");
 		try {
@@ -401,7 +408,7 @@ public class Client {
 			throw new ProgramInvocationException("Could not upload the program's JAR files to the JobManager.", e);
 		}
 
-		long beforeSubmit = System.currentTimeMillis();
+		long afterUploadJarFiles = System.currentTimeMillis();
 
 		JobSubmissionResult result = null;
 		try {
@@ -409,7 +416,12 @@ public class Client {
 			JobClient.submitJobDetached(jobManagerGateway, jobGraph, timeout, classLoader);
 			result = new JobSubmissionResult(jobGraph.getJobID());
 			long afterSubmit = System.currentTimeMillis();
-			System.out.println("SUBMIT_TIME: " + (beforeSubmit - this.startTime) + "\t" + (afterSubmit - this.startTime));
+			System.out.println("SUBMIT_TIME: " + (beforeJobGraph - this.startTime) + "\t" +
+					(beforeDetachted - this.startTime) + "\t" +
+				(afterJobManagerGateway - this.startTime) + "\t" +
+					(afterUploadJarFiles - this.startTime) + "\t" +
+					(afterSubmit - this.startTime) + "\t"
+			);
 			return result;
 		} catch (JobExecutionException e) {
 				throw new ProgramInvocationException("The program execution failed: " + e.getMessage(), e);
