@@ -980,7 +980,7 @@ class TaskManager(
     }
   }
   
-  // --------------------------------------------------------------------------
+  // -----------------------------------------------------F---------------------
   //  Task Operations
   // --------------------------------------------------------------------------
 
@@ -1043,7 +1043,7 @@ class TaskManager(
       // all good, we kick off the task, which performs its own initialization
       task.startTaskThread()
       val endTime = System.nanoTime();
-      System.out.println("Task: " + tdd + "\n" + "Time: " + (endTime - startTime) + "\t" + (endTime - startTime)/1000000.0);
+      System.out.println("Time: " + "\t" + startTime + "\t" + endTime + "\t" + (endTime - startTime) + "\t" + (endTime - startTime)/1000000.0);
       sender ! decorateMessage(Acknowledge)
     }
     catch {
