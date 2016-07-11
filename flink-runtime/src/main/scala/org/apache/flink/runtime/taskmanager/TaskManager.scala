@@ -992,7 +992,7 @@ class TaskManager(
    * @param tdd TaskDeploymentDescriptor describing the task to be executed on this [[TaskManager]]
    */
   private def submitTask(tdd: TaskDeploymentDescriptor): Unit = {
-    val startTime = System.currentTimeMillis();
+    val startTime = System.nanoTime();
     try {
       // grab some handles and sanity check on the fly
       val jobManagerActor = currentJobManager match {
@@ -1042,8 +1042,8 @@ class TaskManager(
       
       // all good, we kick off the task, which performs its own initialization
       task.startTaskThread()
-      val endTime = System.currentTimeMillis();
-      System.out.println("Task: " + tdd + "\n" + "Time: " + (endTime - startTime));
+      val endTime = System.nanoTime();
+      System.out.println("Task: " + tdd + "\n" + "Time: " + (endTime - startTime) + "\t" + (endTime - startTime)/1000000.0);
       sender ! decorateMessage(Acknowledge)
     }
     catch {
