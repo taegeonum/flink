@@ -73,7 +73,6 @@ public class WindowJoin {
 		// connect to the data sources for grades and salaries
 		DataStream<Tuple3<Long, String, Integer>> grades = getGradesPath(env, params);
 		DataStream<Tuple3<Long, String, Integer>> salaries = getSalariesPath(env, params);
-
 		// extract the timestamps
 		grades = grades.assignTimestampsAndWatermarks(new MyTimestampExtractor());
 		salaries = salaries.assignTimestampsAndWatermarks(new MyTimestampExtractor());
