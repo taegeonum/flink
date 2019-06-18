@@ -326,7 +326,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 
 		if (slotSharingGroupId != null) {
 			// allocate slot with slot sharing
-			log.info("Allocate slot with slot sharing");
+			log.info("Allocate slot with slot sharing group {}", slotSharingGroupId);
 			final SlotSharingManager multiTaskSlotManager = slotSharingManagers.computeIfAbsent(
 				slotSharingGroupId,
 				id -> new SlotSharingManager(
@@ -338,6 +338,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 
 			try {
 				if (task.getCoLocationConstraint() != null) {
+					log.info("Allocate slot with slot sharing group {}, getCoLocationConstraint: {}", slotSharingGroupId, task.getCoLocationConstraint());
 					multiTaskSlotLocality = allocateCoLocatedMultiTaskSlot(
 						task.getCoLocationConstraint(),
 						multiTaskSlotManager,
@@ -345,6 +346,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 						allowQueuedScheduling,
 						allocationTimeout);
 				} else {
+					log.info("Allocate slot with slot sharing group {}, no coLocationConstraint: {}", slotSharingGroupId, task.getCoLocationConstraint());
 					multiTaskSlotLocality = allocateMultiTaskSlot(
 						task.getJobVertexId(),
 						multiTaskSlotManager,
