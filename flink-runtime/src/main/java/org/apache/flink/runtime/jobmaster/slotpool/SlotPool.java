@@ -320,6 +320,8 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			boolean allowQueuedScheduling,
 			Time allocationTimeout) {
 
+		// TODO: 여기서 최대한 한 taskManager로 몰아넣도록 slot allocation 해야함
+
 		log.info("Allocating slot with request {} for task execution {}", slotRequestId, task.getTaskToExecute());
 
 		final SlotSharingGroupId slotSharingGroupId = task.getSlotSharingGroupId();
@@ -520,6 +522,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			slotProfile.matcher());
 
 		if (multiTaskSlotLocality != null && multiTaskSlotLocality.getLocality() == Locality.LOCAL) {
+			LOG.info("MultiTaskSlotLocality is not null: {}", multiTaskSlotLocality);
 			return multiTaskSlotLocality;
 		}
 
@@ -531,6 +534,8 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 
 		if (polledSlotAndLocality != null && (polledSlotAndLocality.getLocality() == Locality.LOCAL || multiTaskSlotLocality == null)) {
 
+			LOG.info("polledSlotAndLocality is not null: {}", polledSlotAndLocality);
+
 			final AllocatedSlot allocatedSlot = polledSlotAndLocality.getSlot();
 			final SlotSharingManager.MultiTaskSlot multiTaskSlot = slotSharingManager.createRootSlot(
 				multiTaskSlotRequestId,
@@ -538,6 +543,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 				allocatedSlotRequestId);
 
 			if (allocatedSlot.tryAssignPayload(multiTaskSlot)) {
+				LOG.info("allocatedSlot.tryAssignPayload(multiTaskSlot): {}", multiTaskSlot);
 				return SlotSharingManager.MultiTaskSlotLocality.of(multiTaskSlot, polledSlotAndLocality.getLocality());
 			} else {
 				multiTaskSlot.release(new FlinkException("Could not assign payload to allocated slot " +
@@ -553,6 +559,8 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 					null,
 					new FlinkException("Locality constraint is not better fulfilled by allocated slot."));
 			}
+
+			LOG.info("polledSlotAndLocality != null and multiTaskSlotLocality != null: {}, {}", polledSlotAndLocality, multiTaskSlotLocality);
 			return multiTaskSlotLocality;
 		}
 
@@ -560,7 +568,13 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			// there is no slot immediately available --> check first for uncompleted slots at the slot sharing group
 			SlotSharingManager.MultiTaskSlot multiTaskSlotFuture = slotSharingManager.getUnresolvedRootSlot(groupId);
 
+			if (multiTaskSlotFuture != null) {
+				LOG.info("allowQueuedScheduling true and MultiTaskSlotFuture is not null: {}", multiTaskSlotFuture);
+			}
+
 			if (multiTaskSlotFuture == null) {
+				LOG.info("allowQueuedScheduling true and MultiTaskSlotFuture is null");
+
 				// it seems as if we have to request a new slot from the resource manager, this is always the last resort!!!
 				final CompletableFuture<AllocatedSlot> futureSlot = requestNewAllocatedSlot(
 					allocatedSlotRequestId,
