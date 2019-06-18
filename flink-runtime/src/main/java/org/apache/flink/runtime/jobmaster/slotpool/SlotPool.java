@@ -53,6 +53,8 @@ import org.apache.flink.runtime.util.clock.SystemClock;
 import org.apache.flink.util.AbstractID;
 import org.apache.flink.util.FlinkException;
 import org.apache.flink.util.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -91,6 +93,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * TODO : Make pass location preferences to ResourceManager when sending a slot request
  */
 public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedSlotActions {
+
+	private static final Logger LOG = LoggerFactory.getLogger(SlotPool.class.getName());
 
 	/** The interval (in milliseconds) in which the SlotPool writes its slot distribution on debug level. */
 	private static final int STATUS_LOG_INTERVAL_MS = 60_000;
@@ -316,12 +320,13 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			boolean allowQueuedScheduling,
 			Time allocationTimeout) {
 
-		log.debug("Allocating slot with request {} for task execution {}", slotRequestId, task.getTaskToExecute());
+		log.info("Allocating slot with request {} for task execution {}", slotRequestId, task.getTaskToExecute());
 
 		final SlotSharingGroupId slotSharingGroupId = task.getSlotSharingGroupId();
 
 		if (slotSharingGroupId != null) {
 			// allocate slot with slot sharing
+			log.info("Allocate slot with slot sharing");
 			final SlotSharingManager multiTaskSlotManager = slotSharingManagers.computeIfAbsent(
 				slotSharingGroupId,
 				id -> new SlotSharingManager(
@@ -362,6 +367,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			return leaf.getLogicalSlotFuture();
 		} else {
 			// request an allocated slot to assign a single logical slot to
+			log.info("request an allocated slot to assign a single logical slot to");
 			CompletableFuture<SlotAndLocality> slotAndLocalityFuture = requestAllocatedSlot(
 				slotRequestId,
 				slotProfile,
@@ -613,6 +619,9 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 
 		// (1) do we have a slot available already?
 		SlotAndLocality slotFromPool = pollAndAllocateSlot(slotRequestId, slotProfile);
+		LOG.info("do we have a slot available already?: {}", slotFromPool);
+
+
 
 		if (slotFromPool != null) {
 			allocatedSlotLocalityFuture = CompletableFuture.completedFuture(slotFromPool);

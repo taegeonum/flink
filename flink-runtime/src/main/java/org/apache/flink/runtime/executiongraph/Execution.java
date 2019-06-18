@@ -453,17 +453,6 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			Time allocationTimeout) throws IllegalExecutionStateException {
 
 
-		StackTraceElement[] elements = Thread.currentThread().getStackTrace();
-		StringBuilder sb = new StringBuilder();
-		for (int i = 1; i < elements.length; i++) {
-			StackTraceElement s = elements[i];
-			sb.append("\tat " + s.getClassName() + "." + s.getMethodName()
-				+ "(" + s.getFileName() + ":" + s.getLineNumber() + ")");
-		}
-
-		LOG.info(sb.toString());
-
-
 		LOG.info("Allocate and assign slot for execution");
 
 		checkNotNull(slotProvider);
@@ -501,8 +490,10 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 
 			final CompletableFuture<LogicalSlot> logicalSlotFuture = preferredLocationsFuture
 				.thenCompose(
-					(Collection<TaskManagerLocation> preferredLocations) ->
-						slotProvider.allocateSlot(
+					(Collection<TaskManagerLocation> preferredLocations) -> {
+						LOG.info("Allocate slot! slotRequestId: {}, preferedLoc: {}, prevId: {}",
+							slotRequestId, preferredLocations, previousAllocationIDs);
+						return slotProvider.allocateSlot(
 							slotRequestId,
 							toSchedule,
 							queued,
@@ -510,7 +501,9 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 								ResourceProfile.UNKNOWN,
 								preferredLocations,
 								previousAllocationIDs),
-							allocationTimeout));
+							allocationTimeout);
+					});
+
 
 			// register call back to cancel slot request in case that the execution gets canceled
 			releaseFuture.whenComplete(
