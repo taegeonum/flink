@@ -109,6 +109,7 @@ import org.apache.flink.util.InstantiationUtil;
 import org.apache.flink.util.Preconditions;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -145,6 +146,8 @@ import static org.apache.flink.util.Preconditions.checkState;
  * </ul>
  */
 public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMasterGateway {
+
+	private static final Logger LOG = LoggerFactory.getLogger(JobMaster.class);
 
 	/** Default names for Flink's distributed components. */
 	public static final String JOB_MANAGER_NAME = "jobmanager";
@@ -411,6 +414,9 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId> implements JobMast
 			int newParallelism,
 			RescalingBehaviour rescalingBehaviour,
 			Time timeout) {
+
+		LOG.info("Start rescaleJob to parallelism {}, {}, {}", newParallelism, rescalingBehaviour, timeout);
+
 		final ArrayList<JobVertexID> allOperators = new ArrayList<>(jobGraph.getNumberOfVertices());
 
 		for (JobVertex jobVertex : jobGraph.getVertices()) {

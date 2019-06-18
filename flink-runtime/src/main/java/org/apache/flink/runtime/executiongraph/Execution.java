@@ -452,6 +452,8 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			LocationPreferenceConstraint locationPreferenceConstraint,
 			Time allocationTimeout) throws IllegalExecutionStateException {
 
+		LOG.info("Allocate and assign slot for execution");
+
 		checkNotNull(slotProvider);
 
 		final SlotSharingGroup sharingGroup = vertex.getJobVertex().getSlotSharingGroup();

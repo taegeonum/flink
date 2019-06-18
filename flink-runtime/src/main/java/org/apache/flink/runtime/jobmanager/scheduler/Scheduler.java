@@ -151,6 +151,8 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			SlotProfile slotProfile,
 			Time allocationTimeout) {
 
+		LOG.info("Allocate slot {}, {}, {}", slotRequestId, task, slotProfile);
+
 		try {
 			final Object ret = scheduleTask(task, allowQueued, slotProfile.getPreferredLocations());
 
@@ -183,9 +185,9 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 		if (task == null) {
 			throw new NullPointerException();
 		}
-		if (LOG.isDebugEnabled()) {
+		//if (LOG.isDebugEnabled()) {
 			LOG.debug("Scheduling task " + task);
-		}
+		//}
 
 		final ExecutionVertex vertex = task.getTaskToExecute().getVertex();
 		
@@ -430,6 +432,8 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 		// in the set-with-available-instances
 		while (true) {
 			Pair<Instance, Locality> instanceLocalityPair = findInstance(requestedLocations, localOnly);
+
+			LOG.info("InstanceLocalityPair: {}", instanceLocalityPair);
 			
 			if (instanceLocalityPair == null) {
 				// nothing is available
@@ -488,6 +492,8 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 	private Pair<Instance, Locality> findInstance(Iterable<TaskManagerLocation> requestedLocations, boolean localOnly) {
 		
 		// drain the queue of newly available instances
+		LOG.info("FInd instance {}", newlyAvailableInstances);
+
 		while (this.newlyAvailableInstances.size() > 0) {
 			Instance queuedInstance = this.newlyAvailableInstances.poll();
 			if (queuedInstance != null) {
@@ -502,13 +508,16 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 
 		Iterator<TaskManagerLocation> locations = requestedLocations == null ? null : requestedLocations.iterator();
 
+
 		if (locations != null && locations.hasNext()) {
 			// we have a locality preference
 
 			while (locations.hasNext()) {
 				TaskManagerLocation location = locations.next();
+				LOG.info("locations {}", location);
 				if (location != null) {
 					Instance instance = instancesWithAvailableResources.remove(location.getResourceID());
+					LOG.info("instance {}", instance);
 					if (instance != null) {
 						return new ImmutablePair<Instance, Locality>(instance, Locality.LOCAL);
 					}
@@ -524,6 +533,7 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 				Iterator<Instance> instances = instancesWithAvailableResources.values().iterator();
 				Instance instanceToUse = instances.next();
 				instances.remove();
+				LOG.info("take first instance from the instances wiht resources {}", instanceToUse);
 
 				return new ImmutablePair<>(instanceToUse, Locality.NON_LOCAL);
 			}
@@ -533,6 +543,8 @@ public class Scheduler implements InstanceListener, SlotAvailabilityListener, Sl
 			Iterator<Instance> instances = instancesWithAvailableResources.values().iterator();
 			Instance instanceToUse = instances.next();
 			instances.remove();
+
+			LOG.info("no location preference, so use some instance {}", instanceToUse);
 
 			return new ImmutablePair<>(instanceToUse, Locality.UNCONSTRAINED);
 		}
