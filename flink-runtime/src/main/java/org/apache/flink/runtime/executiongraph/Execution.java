@@ -452,6 +452,18 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 			LocationPreferenceConstraint locationPreferenceConstraint,
 			Time allocationTimeout) throws IllegalExecutionStateException {
 
+
+		StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 1; i < elements.length; i++) {
+			StackTraceElement s = elements[i];
+			sb.append("\tat " + s.getClassName() + "." + s.getMethodName()
+				+ "(" + s.getFileName() + ":" + s.getLineNumber() + ")");
+		}
+
+		LOG.info(sb.toString());
+
+
 		LOG.info("Allocate and assign slot for execution");
 
 		checkNotNull(slotProvider);
@@ -513,10 +525,16 @@ public class Execution implements AccessExecution, Archiveable<ArchivedExecution
 
 			return logicalSlotFuture.thenApply(
 				(LogicalSlot logicalSlot) -> {
+
+					LOG.info("vertex: {}, slotSharingGroup: {}, slotSharingGroupId: {}, " +
+						"toSchedule: {}, executionVertex: {}, lastAllocation: {}, logicalSlot: {}",
+						vertex, slotSharingGroupId, slotSharingGroupId, toSchedule, executionVertex, lastAllocation, logicalSlot);
 					if (tryAssignResource(logicalSlot)) {
+						LOG.info("tryAssignResource: true");
 						return this;
 					} else {
 						// release the slot
+						LOG.info("tryAssignResource: false, release slot");
 						logicalSlot.releaseSlot(new FlinkException("Could not assign logical slot to execution " + this + '.'));
 
 						throw new CompletionException(new FlinkException("Could not assign slot " + logicalSlot + " to execution " + this + " because it has already been assigned "));

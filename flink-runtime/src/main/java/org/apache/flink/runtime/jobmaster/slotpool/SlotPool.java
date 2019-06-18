@@ -679,11 +679,14 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 		checkNotNull(pendingRequest);
 
 		StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+		StringBuilder sb = new StringBuilder();
 		for (int i = 1; i < elements.length; i++) {
 			StackTraceElement s = elements[i];
-			System.out.println("\tat " + s.getClassName() + "." + s.getMethodName()
+			sb.append("\tat " + s.getClassName() + "." + s.getMethodName()
 				+ "(" + s.getFileName() + ":" + s.getLineNumber() + ")");
 		}
+
+		log.info(sb.toString());
 
 		log.info("Requesting slot with profile {} from resource manager (request = {}).", pendingRequest.getResourceProfile(), pendingRequest.getSlotRequestId());
 
