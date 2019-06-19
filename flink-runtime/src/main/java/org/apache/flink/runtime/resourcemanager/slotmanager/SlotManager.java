@@ -494,8 +494,8 @@ public class SlotManager implements AutoCloseable {
 
 		final List<Map.Entry<SlotID, TaskManagerSlot>> l = orderByTaskManager();
 
-		LOG.info("Ordered free slot list: {}", l.stream().map(
-			e -> e.getValue().getTaskManagerConnection().getTaskExecutorGateway().getHostname()).collect(Collectors.toList()));
+		//LOG.info("Ordered free slot list: {}", l.stream().map(
+		// e -> e.getValue().getTaskManagerConnection().getCanonicalHostname()).collect(Collectors.toList()));
 
 		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = l.iterator();
 
@@ -662,6 +662,7 @@ public class SlotManager implements AutoCloseable {
 		if (taskManagerSlot != null) {
 			allocateSlot(taskManagerSlot, pendingSlotRequest);
 		} else {
+			// Here we should start vm and task manager
 			resourceActions.allocateResource(pendingSlotRequest.getResourceProfile());
 		}
 	}
