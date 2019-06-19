@@ -480,6 +480,8 @@ public class SlotManager implements AutoCloseable {
 	protected TaskManagerSlot findMatchingSlot(ResourceProfile requestResourceProfile) {
 		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = freeSlots.entrySet().iterator();
 
+		LOG.info("freeSlots: {}", freeSlots.size());
+
 		while (iterator.hasNext()) {
 			TaskManagerSlot taskManagerSlot = iterator.next().getValue();
 
@@ -636,6 +638,8 @@ public class SlotManager implements AutoCloseable {
 	 */
 	private void internalRequestSlot(PendingSlotRequest pendingSlotRequest) throws ResourceManagerException {
 		TaskManagerSlot taskManagerSlot = findMatchingSlot(pendingSlotRequest.getResourceProfile());
+
+		LOG.info("taskManagerSlot: {}", taskManagerSlot);
 
 		if (taskManagerSlot != null) {
 			allocateSlot(taskManagerSlot, pendingSlotRequest);

@@ -536,7 +536,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 		final SlotAndLocality polledSlotAndLocality = pollAndAllocateSlot(allocatedSlotRequestId, slotProfile);
 
 		if (polledSlotAndLocality != null && (polledSlotAndLocality.getLocality() == Locality.LOCAL || multiTaskSlotLocality == null)) {
-			// NO
+			// slot 존재할 때 request 하는 path
 			LOG.info("polledSlotAndLocality is not null: {}", polledSlotAndLocality);
 
 			final AllocatedSlot allocatedSlot = polledSlotAndLocality.getSlot();
@@ -576,6 +576,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			}
 
 			if (multiTaskSlotFuture == null) {
+				// 맨 처음에 아무것도 없을때 slot request하는 path !!
 				LOG.info("allowQueuedScheduling true and MultiTaskSlotFuture is null");
 
 				// it seems as if we have to request a new slot from the resource manager, this is always the last resort!!!
@@ -845,6 +846,8 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 
 	@Nullable
 	private SlotAndLocality pollAndAllocateSlot(SlotRequestId slotRequestId, SlotProfile slotProfile) {
+		// TODO: 여기서 바꿔야함!!
+		LOG.info("Available slots: {}", availableSlots.size());
 		SlotAndLocality slotFromPool = availableSlots.poll(slotProfile);
 
 		if (slotFromPool != null) {
