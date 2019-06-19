@@ -51,6 +51,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * The slot manager is responsible for maintaining a view on all registered task manager slots,
@@ -490,7 +491,8 @@ public class SlotManager implements AutoCloseable {
 
 		final List<Map.Entry<SlotID, TaskManagerSlot>> l = orderByTaskManager();
 
-		LOG.info("Ordered free slot list: {}", l);
+		LOG.info("Ordered free slot list: {}", l.stream().map(
+			e -> e.getValue().getTaskManagerConnection().getTaskExecutorGateway().getHostname()).collect(Collectors.toList()));
 
 		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = l.iterator();
 
