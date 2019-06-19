@@ -1476,6 +1476,17 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			}
 		}
 
+		private List<SlotAndTimestamp> sortAvailableSlots() {
+			Collection<SlotAndTimestamp> slotAndTimestamps = availableSlots.values();
+			final List<SlotAndTimestamp> l = new ArrayList<>(slotAndTimestamps);
+
+			l.sort((t1, t2) -> {
+				return t1.slot.getTaskManagerId().getResourceIdString().compareTo(t2.slot.getTaskManagerId().getResourceIdString());
+			});
+
+			return l;
+		}
+
 		/**
 		 * Poll a slot which matches the required resource profile. The polling tries to satisfy the
 		 * location preferences, by TaskManager and by host.
@@ -1491,7 +1502,9 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			}
 
 			SlotProfile.ProfileToSlotContextMatcher matcher = slotProfile.matcher();
-			Collection<SlotAndTimestamp> slotAndTimestamps = availableSlots.values();
+			//Collection<SlotAndTimestamp> slotAndTimestamps = availableSlots.values();
+			Collection<SlotAndTimestamp> slotAndTimestamps = sortAvailableSlots();
+
 
 			SlotAndLocality matchingSlotAndLocality = matcher.findMatchWithLocality(
 				slotAndTimestamps.stream(),
