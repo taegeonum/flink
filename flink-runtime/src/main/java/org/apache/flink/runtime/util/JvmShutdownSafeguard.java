@@ -112,6 +112,8 @@ public class JvmShutdownSafeguard extends Thread {
 	public static void installAsShutdownHook(Logger logger, long delayMillis) {
 		checkArgument(delayMillis >= 0, "delay must be >= 0");
 
+		logger.info("Shutdown hook is called!!");
+
 		// install the blocking shutdown hook
 		Thread shutdownHook = new JvmShutdownSafeguard(delayMillis);
 		ShutdownHookUtil.addShutdownHookThread(shutdownHook, JvmShutdownSafeguard.class.getSimpleName(), logger);
