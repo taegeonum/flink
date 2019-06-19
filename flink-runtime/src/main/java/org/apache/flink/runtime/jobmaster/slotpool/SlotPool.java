@@ -1482,8 +1482,6 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 
 
 			l.sort((t1, t2) -> {
-				LOG.info("Available slot taskManager hostname: {}, Fqn: {}, address:{}", t1.slot.getTaskManagerLocation().getHostname(),
-					t1.slot.getTaskManagerLocation().getFQDNHostname(), t1.slot.getTaskManagerLocation().address());
 				return t1.slot.getTaskManagerLocation().getHostname().compareTo(t2.slot.getTaskManagerLocation().getHostname());
 			});
 

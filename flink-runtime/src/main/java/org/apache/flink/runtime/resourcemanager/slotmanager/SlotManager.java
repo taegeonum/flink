@@ -44,6 +44,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -499,6 +502,15 @@ public class SlotManager implements AutoCloseable {
 		while (iterator.hasNext()) {
 			Map.Entry<SlotID, TaskManagerSlot> entry = iterator.next();
 			TaskManagerSlot taskManagerSlot = entry.getValue();
+
+			try {
+				final InetAddress addr = InetAddress.getByName(taskManagerSlot.getTaskManagerConnection().getTaskExecutorGateway().getHostname());
+				final String canonical = addr.getCanonicalHostName();
+				LOG.info("Task manager canonical host name: {}", canonical);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
 
 			LOG.info("Task manager instance id: {}", taskManagerSlot.getTaskManagerConnection().getInstanceID());
 			LOG.info("Task manager resource id: {}", taskManagerSlot.getTaskManagerConnection().getResourceID());
