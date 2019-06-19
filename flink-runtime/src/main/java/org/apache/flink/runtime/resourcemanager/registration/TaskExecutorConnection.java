@@ -22,6 +22,9 @@ import org.apache.flink.runtime.clusterframework.types.ResourceID;
 import org.apache.flink.runtime.instance.InstanceID;
 import org.apache.flink.runtime.taskexecutor.TaskExecutorGateway;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
@@ -36,10 +39,20 @@ public class TaskExecutorConnection {
 
 	private final TaskExecutorGateway taskExecutorGateway;
 
+	private final String hostName;
+
 	public TaskExecutorConnection(ResourceID resourceID, TaskExecutorGateway taskExecutorGateway) {
 		this.resourceID = checkNotNull(resourceID);
 		this.instanceID = new InstanceID();
 		this.taskExecutorGateway = checkNotNull(taskExecutorGateway);
+		try {
+			final InetAddress addr = InetAddress.getByName(taskExecutorGateway.getHostname());
+			final String canonical = addr.getCanonicalHostName();
+			this.hostName = canonical;
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 
 	public ResourceID getResourceID() {
@@ -52,5 +65,9 @@ public class TaskExecutorConnection {
 
 	public TaskExecutorGateway getTaskExecutorGateway() {
 		return taskExecutorGateway;
+	}
+
+	public String getCanonicalHostname() {
+		return hostName;
 	}
 }

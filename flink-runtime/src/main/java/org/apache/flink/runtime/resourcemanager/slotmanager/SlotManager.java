@@ -468,8 +468,8 @@ public class SlotManager implements AutoCloseable {
 		final List<Map.Entry<SlotID, TaskManagerSlot>> l = new ArrayList<>(freeSlots.entrySet());
 
 		l.sort((e1, e2) -> {
-			return e1.getValue().getTaskManagerConnection().getTaskExecutorGateway().getAddress()
-				.compareTo(e2.getValue().getTaskManagerConnection().getTaskExecutorGateway().getAddress());
+			return e1.getValue().getTaskManagerConnection().getCanonicalHostname()
+				.compareTo(e2.getValue().getTaskManagerConnection().getCanonicalHostname());
 		});
 
 		return l;
@@ -502,19 +502,6 @@ public class SlotManager implements AutoCloseable {
 		while (iterator.hasNext()) {
 			Map.Entry<SlotID, TaskManagerSlot> entry = iterator.next();
 			TaskManagerSlot taskManagerSlot = entry.getValue();
-
-			try {
-				final InetAddress addr = InetAddress.getByName(taskManagerSlot.getTaskManagerConnection().getTaskExecutorGateway().getHostname());
-				final String canonical = addr.getCanonicalHostName();
-				LOG.info("Task manager canonical host name: {}", canonical);
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-
-			LOG.info("Task manager instance id: {}", taskManagerSlot.getTaskManagerConnection().getInstanceID());
-			LOG.info("Task manager resource id: {}", taskManagerSlot.getTaskManagerConnection().getResourceID());
-			LOG.info("slot number: {}", entry.getKey().getSlotNumber());
 
 			// sanity check
 			Preconditions.checkState(
