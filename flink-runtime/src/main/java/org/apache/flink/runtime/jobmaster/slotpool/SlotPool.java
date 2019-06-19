@@ -516,12 +516,15 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			boolean allowQueuedScheduling,
 			Time allocationTimeout) throws NoResourceAvailableException {
 
+		LOG.info("Start allocateMultiTaskSlot");
+
 		// check first whether we have a resolved root slot which we can use
 		SlotSharingManager.MultiTaskSlotLocality multiTaskSlotLocality = slotSharingManager.getResolvedRootSlot(
 			groupId,
 			slotProfile.matcher());
 
 		if (multiTaskSlotLocality != null && multiTaskSlotLocality.getLocality() == Locality.LOCAL) {
+			// NO
 			LOG.info("MultiTaskSlotLocality is not null: {}", multiTaskSlotLocality);
 			return multiTaskSlotLocality;
 		}
@@ -533,7 +536,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 		final SlotAndLocality polledSlotAndLocality = pollAndAllocateSlot(allocatedSlotRequestId, slotProfile);
 
 		if (polledSlotAndLocality != null && (polledSlotAndLocality.getLocality() == Locality.LOCAL || multiTaskSlotLocality == null)) {
-
+			// NO
 			LOG.info("polledSlotAndLocality is not null: {}", polledSlotAndLocality);
 
 			final AllocatedSlot allocatedSlot = polledSlotAndLocality.getSlot();
@@ -609,9 +612,12 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 					});
 			}
 
+			LOG.info("Returning multiTaskSlotFuture: {}", multiTaskSlotFuture);
+
 			return SlotSharingManager.MultiTaskSlotLocality.of(multiTaskSlotFuture, Locality.UNKNOWN);
 
 		} else {
+			LOG.info("No resource available");
 			throw new NoResourceAvailableException("Could not allocate a shared slot for " + groupId + '.');
 		}
 	}
