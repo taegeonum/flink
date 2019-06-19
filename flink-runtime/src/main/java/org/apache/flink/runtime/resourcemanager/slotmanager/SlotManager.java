@@ -461,7 +461,6 @@ public class SlotManager implements AutoCloseable {
 	}
 
 	private List<Map.Entry<SlotID, TaskManagerSlot>> orderByTaskManager() {
-		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = freeSlots.entrySet().iterator();
 		final List<Map.Entry<SlotID, TaskManagerSlot>> l = new ArrayList<>(freeSlots.entrySet());
 
 		l.sort((e1, e2) -> {
@@ -490,6 +489,9 @@ public class SlotManager implements AutoCloseable {
 		LOG.info("freeSlots: {}", freeSlots.size());
 
 		final List<Map.Entry<SlotID, TaskManagerSlot>> l = orderByTaskManager();
+
+		LOG.info("Ordered free slot list: {}", l);
+
 		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = l.iterator();
 
 		while (iterator.hasNext()) {
