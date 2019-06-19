@@ -500,6 +500,10 @@ public class SlotManager implements AutoCloseable {
 			Map.Entry<SlotID, TaskManagerSlot> entry = iterator.next();
 			TaskManagerSlot taskManagerSlot = entry.getValue();
 
+			LOG.info("Task manager instance id: {}", taskManagerSlot.getTaskManagerConnection().getInstanceID());
+			LOG.info("Task manager resource id: {}", taskManagerSlot.getTaskManagerConnection().getResourceID());
+			LOG.info("slot number: {}", entry.getKey().getSlotNumber());
+
 			// sanity check
 			Preconditions.checkState(
 				taskManagerSlot.getState() == TaskManagerSlot.State.FREE,
