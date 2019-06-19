@@ -168,6 +168,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 
 				LOG.info("Shutting down taskManager... log");
 
+				taskManager.postStop();
 				taskManager.shutDown();
 				final CompletableFuture<Void> taskManagerTerminationFuture = taskManager.getTerminationFuture();
 
