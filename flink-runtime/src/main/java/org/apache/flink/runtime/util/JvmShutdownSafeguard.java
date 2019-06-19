@@ -21,6 +21,7 @@ package org.apache.flink.runtime.util;
 import org.apache.flink.util.ShutdownHookUtil;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 
@@ -36,6 +37,8 @@ import static org.apache.flink.util.Preconditions.checkArgument;
  * terminate within a certain time.
  */
 public class JvmShutdownSafeguard extends Thread {
+
+	private static final Logger LOG = LoggerFactory.getLogger(JvmShutdownSafeguard.class);
 
 	/** Default delay to wait after clean shutdown was stared, before forcibly terminating the JVM */  
 	private static final long DEFAULT_DELAY = 5000L;
@@ -76,6 +79,8 @@ public class JvmShutdownSafeguard extends Thread {
 
 		@Override
 		public void run() {
+
+			LOG.info("DelayedTerminator is called!!");
 			try {
 				Thread.sleep(delayMillis);
 			}
