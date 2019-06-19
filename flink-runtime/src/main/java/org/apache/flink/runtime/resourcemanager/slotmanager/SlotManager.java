@@ -44,12 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -465,6 +460,17 @@ public class SlotManager implements AutoCloseable {
 		return null;
 	}
 
+	private List<Map.Entry<SlotID, TaskManagerSlot>> orderByTaskManager() {
+		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = freeSlots.entrySet().iterator();
+		final List<Map.Entry<SlotID, TaskManagerSlot>> l = new ArrayList<>(freeSlots.entrySet());
+
+		l.sort((e1, e2) -> {
+			return e1.getKey().getResourceID().getResourceIdString().compareTo(e2.getKey().getResourceID().getResourceIdString());
+		});
+
+		return l;
+	}
+
 	/**
 	 * Finds a matching slot for a given resource profile. A matching slot has at least as many
 	 * resources available as the given resource profile. If there is no such slot available, then
@@ -478,12 +484,16 @@ public class SlotManager implements AutoCloseable {
 	 * slot available.
 	 */
 	protected TaskManagerSlot findMatchingSlot(ResourceProfile requestResourceProfile) {
-		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = freeSlots.entrySet().iterator();
+		//Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = freeSlots.entrySet().iterator();
 
 		LOG.info("freeSlots: {}", freeSlots.size());
 
+		final List<Map.Entry<SlotID, TaskManagerSlot>> l = orderByTaskManager();
+		Iterator<Map.Entry<SlotID, TaskManagerSlot>> iterator = l.iterator();
+
 		while (iterator.hasNext()) {
-			TaskManagerSlot taskManagerSlot = iterator.next().getValue();
+			Map.Entry<SlotID, TaskManagerSlot> entry = iterator.next();
+			TaskManagerSlot taskManagerSlot = entry.getValue();
 
 			// sanity check
 			Preconditions.checkState(
@@ -492,7 +502,7 @@ public class SlotManager implements AutoCloseable {
 				taskManagerSlot.getSlotId(), taskManagerSlot.getState());
 
 			if (taskManagerSlot.getResourceProfile().isMatching(requestResourceProfile)) {
-				iterator.remove();
+				freeSlots.remove(entry.getKey());
 				return taskManagerSlot;
 			}
 		}
