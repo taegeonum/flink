@@ -263,7 +263,6 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 		// startup checks and logging
 		EnvironmentInformation.logEnvironmentInfo(LOG, "TaskManager", args);
 		SignalHandler.register(LOG);
-		JvmShutdownSafeguard.installAsShutdownHook(LOG);
 
 		long maxOpenFileHandles = EnvironmentInformation.getOpenFileHandlesLimit();
 
@@ -304,6 +303,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 
 	public static void runTaskManager(Configuration configuration, ResourceID resourceId) throws Exception {
 		final TaskManagerRunner taskManagerRunner = new TaskManagerRunner(configuration, resourceId);
+		JvmShutdownSafeguard.installAsShutdownHook(LOG, taskManagerRunner);
 
 		taskManagerRunner.start();
 	}

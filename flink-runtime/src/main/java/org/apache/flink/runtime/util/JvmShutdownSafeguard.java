@@ -18,10 +18,13 @@
 
 package org.apache.flink.runtime.util;
 
+import org.apache.flink.util.AutoCloseableAsync;
 import org.apache.flink.util.ShutdownHookUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 
@@ -48,11 +51,13 @@ public class JvmShutdownSafeguard extends Thread {
 
 	/** The thread that actually does the termination */
 	private final Thread terminator;
-	
-	private JvmShutdownSafeguard(long delayMillis) {
+
+
+	private JvmShutdownSafeguard(long delayMillis,
+								 final AutoCloseableAsync closeableAsync) {
 		setName("JVM Terminator Launcher");
 
-		this.terminator = new Thread(new DelayedTerminator(delayMillis), "Jvm Terminator");
+		this.terminator = new Thread(new DelayedTerminator(delayMillis, closeableAsync), "Jvm Terminator");
 		this.terminator.setDaemon(true);
 	}
 
@@ -72,9 +77,12 @@ public class JvmShutdownSafeguard extends Thread {
 	private static class DelayedTerminator implements Runnable {
 
 		private final long delayMillis;
+		private final AutoCloseableAsync closeableAsync;
 
-		private DelayedTerminator(long delayMillis) {
+		private DelayedTerminator(long delayMillis,
+								  AutoCloseableAsync closeableAsync) {
 			this.delayMillis = delayMillis;
+			this.closeableAsync = closeableAsync;
 		}
 
 		@Override
@@ -82,9 +90,12 @@ public class JvmShutdownSafeguard extends Thread {
 
 			LOG.info("DelayedTerminator is called!!");
 			try {
+				closeableAsync.close();
 				Thread.sleep(delayMillis);
 			}
 			catch (Throwable t) {
+				LOG.info("Get exception while closing... but just ignore!!");
+				t.printStackTrace();
 				// catch all, including thread death, etc
 			}
 
@@ -96,6 +107,10 @@ public class JvmShutdownSafeguard extends Thread {
 	//  Installing as a shutdown hook
 	// ------------------------------------------------------------------------
 
+	public static void installAsShutdownHook(Logger logger, AutoCloseableAsync closeableAsync) {
+		installAsShutdownHook(logger, DEFAULT_DELAY, closeableAsync);
+	}
+
 	/**
 	 * Installs the safeguard shutdown hook. The maximum time that the JVM is allowed to spend
 	 * on shutdown before being killed is five seconds.
@@ -103,7 +118,12 @@ public class JvmShutdownSafeguard extends Thread {
 	 * @param logger The logger to log errors to.
 	 */
 	public static void installAsShutdownHook(Logger logger) {
-		installAsShutdownHook(logger, DEFAULT_DELAY);
+		installAsShutdownHook(logger, new AutoCloseableAsync() {
+			@Override
+			public CompletableFuture<Void> closeAsync() {
+				return null;
+			}
+		});
 	}
 
 	/**
@@ -114,13 +134,13 @@ public class JvmShutdownSafeguard extends Thread {
 	 * @param delayMillis The delay (in milliseconds) to wait after clean shutdown was stared,
 	 *                    before forcibly terminating the JVM.
 	 */
-	public static void installAsShutdownHook(Logger logger, long delayMillis) {
+	public static void installAsShutdownHook(Logger logger, long delayMillis, AutoCloseableAsync closeableAsync) {
 		checkArgument(delayMillis >= 0, "delay must be >= 0");
 
 		logger.info("Shutdown hook is called!!");
 
 		// install the blocking shutdown hook
-		Thread shutdownHook = new JvmShutdownSafeguard(delayMillis);
+		Thread shutdownHook = new JvmShutdownSafeguard(delayMillis, closeableAsync);
 		ShutdownHookUtil.addShutdownHookThread(shutdownHook, JvmShutdownSafeguard.class.getSimpleName(), logger);
 	}
 }
