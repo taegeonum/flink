@@ -465,7 +465,8 @@ public class SlotManager implements AutoCloseable {
 		final List<Map.Entry<SlotID, TaskManagerSlot>> l = new ArrayList<>(freeSlots.entrySet());
 
 		l.sort((e1, e2) -> {
-			return e1.getKey().getResourceID().getResourceIdString().compareTo(e2.getKey().getResourceID().getResourceIdString());
+			return e1.getValue().getTaskManagerConnection().getTaskExecutorGateway().getHostname()
+				.compareTo(e2.getValue().getTaskManagerConnection().getTaskExecutorGateway().getHostname());
 		});
 
 		return l;

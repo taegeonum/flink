@@ -1481,7 +1481,7 @@ public class SlotPool extends RpcEndpoint implements SlotPoolGateway, AllocatedS
 			final List<SlotAndTimestamp> l = new ArrayList<>(slotAndTimestamps);
 
 			l.sort((t1, t2) -> {
-				return t1.slot.getTaskManagerId().getResourceIdString().compareTo(t2.slot.getTaskManagerId().getResourceIdString());
+				return t1.slot.getTaskManagerLocation().getHostname().compareTo(t2.slot.getTaskManagerLocation().getHostname());
 			});
 
 			return l;
