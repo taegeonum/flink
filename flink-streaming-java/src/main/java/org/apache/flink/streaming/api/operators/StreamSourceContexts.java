@@ -401,9 +401,8 @@ public class StreamSourceContexts {
 
 		@Override
 		public void collectWithTimestamp(T element, long timestamp) {
-			LOG.info("Collect with timestamp!! {}", element);
 
-			synchronized (checkpointLock) {
+			//synchronized (checkpointLock) {
 				streamStatusMaintainer.toggleStreamStatus(StreamStatus.ACTIVE);
 
 				if (nextCheck != null) {
@@ -413,7 +412,7 @@ public class StreamSourceContexts {
 				}
 
 				processAndCollectWithTimestamp(element, timestamp);
-			}
+			//}
 		}
 
 		@Override
