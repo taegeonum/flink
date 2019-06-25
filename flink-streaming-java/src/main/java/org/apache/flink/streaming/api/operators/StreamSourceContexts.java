@@ -26,8 +26,6 @@ import org.apache.flink.streaming.runtime.streamstatus.StreamStatusMaintainer;
 import org.apache.flink.streaming.runtime.tasks.ProcessingTimeCallback;
 import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.util.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ScheduledFuture;
 
@@ -397,12 +395,9 @@ public class StreamSourceContexts {
 			}
 		}
 
-		protected static final Logger LOG = LoggerFactory.getLogger(StreamSourceContexts.class);
-
 		@Override
 		public void collectWithTimestamp(T element, long timestamp) {
-
-			//synchronized (checkpointLock) {
+			synchronized (checkpointLock) {
 				streamStatusMaintainer.toggleStreamStatus(StreamStatus.ACTIVE);
 
 				if (nextCheck != null) {
@@ -412,7 +407,7 @@ public class StreamSourceContexts {
 				}
 
 				processAndCollectWithTimestamp(element, timestamp);
-			//}
+			}
 		}
 
 		@Override
